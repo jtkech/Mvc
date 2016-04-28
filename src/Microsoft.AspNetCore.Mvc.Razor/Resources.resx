@@ -203,4 +203,10 @@
   <data name="Compilation_DependencyContextIsNotSpecified" xml:space="preserve">
     <value>The Razor page '{0}' failed to compile. Ensure that your application's {1} sets the '{2}' compilation property.</value>
   </data>
+  <data name="AreaViewLocationFormatsIsRequired" xml:space="preserve">
+    <value>AreaViewLocationFormats cannot be empty and is required to locate a view for rendering.</value>
+  </data>
+  <data name="ViewLocationFormatsIsRequired" xml:space="preserve">
+    <value>ViewLocationFormats cannot be empty and is required to locate a view for rendering.</value>
+  </data>
 </root>
