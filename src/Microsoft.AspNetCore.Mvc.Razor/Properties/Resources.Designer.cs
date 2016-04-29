@@ -465,22 +465,6 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// <summary>
         /// '{0}' cannot be empty. These locations are required to locate a view for rendering.
         /// </summary>
-        internal static string AreaViewLocationFormatsIsRequired
-        {
-            get { return GetString("AreaViewLocationFormatsIsRequired"); }
-        }
-
-        /// <summary>
-        /// '{0}' cannot be empty. These locations are required to locate a view for rendering.
-        /// </summary>
-        internal static string FormatAreaViewLocationFormatsIsRequired(object p0)
-        {
-            return string.Format(CultureInfo.CurrentCulture, GetString("AreaViewLocationFormatsIsRequired"), p0);
-        }
-
-        /// <summary>
-        /// '{0}' cannot be empty. These locations are required to locate a view for rendering.
-        /// </summary>
         internal static string ViewLocationFormatsIsRequired
         {
             get { return GetString("ViewLocationFormatsIsRequired"); }

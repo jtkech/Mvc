@@ -22,7 +22,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
                 "/Areas/{2}/MvcViews/{1}/{0}.cshtml",
                 "/Areas/{2}/MvcViews/Shared/{0}.cshtml",
                 "/MvcViews/Shared/{0}.cshtml"
-            }.AsEnumerable();
+            };
 
             // Act
             var builder = new MvcBuilder(services, new ApplicationPartManager());
@@ -39,7 +39,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
 
             // Assert
             var accessor = serviceProvider.GetRequiredService<IOptions<RazorViewEngineOptions>>();
-            Assert.Equal(areaViewLocations, accessor.Value.AreaViewLocationFormats);
+            Assert.Equal(areaViewLocations, accessor.Value.AreaViewLocationFormats.ToArray());
         }
 
         [Fact]
@@ -51,7 +51,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
             {
                 "/MvcViews/{1}/{0}.cshtml",
                 "/MvcViews/Shared/{0}.cshtml"
-            }.AsEnumerable();
+            };
 
             // Act
             var builder = new MvcBuilder(services, new ApplicationPartManager());
@@ -68,7 +68,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
 
             // Assert
             var accessor = serviceProvider.GetRequiredService<IOptions<RazorViewEngineOptions>>();
-            Assert.Equal(viewLocations, accessor.Value.ViewLocationFormats);
+            Assert.Equal(viewLocations, accessor.Value.ViewLocationFormats.ToArray());
         }
 
         [Fact]

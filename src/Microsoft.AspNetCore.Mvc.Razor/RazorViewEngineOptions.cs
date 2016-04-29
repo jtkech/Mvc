@@ -41,7 +41,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// <remarks>
         /// The locations of the views returned from controllers that do not belong to an area.
         /// Locations are composite format strings (see http://msdn.microsoft.com/en-us/library/txafckwd.aspx),
-        /// which contains following indexes:
+        /// which may contain following indexes:
         /// {0} - Action Name
         /// {1} - Controller Name
         /// The values for these locations are case-sensitive on case-sensitive file systems.
@@ -57,7 +57,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// <remarks>
         /// The locations of the views returned from controllers that belong to an area.
         /// Locations are composite format strings (see http://msdn.microsoft.com/en-us/library/txafckwd.aspx),
-        /// which contains following indexes:
+        /// which may contain following indexes:
         /// {0} - Action Name
         /// {1} - Controller Name
         /// {2} - Area name

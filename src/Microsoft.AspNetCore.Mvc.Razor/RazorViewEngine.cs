@@ -48,9 +48,25 @@ namespace Microsoft.AspNetCore.Mvc.Razor
             IRazorPageFactoryProvider pageFactory,
             IRazorPageActivator pageActivator,
             HtmlEncoder htmlEncoder,
-            IOptions<RazorViewEngineOptions> options,
+            IOptions<RazorViewEngineOptions> optionsAccessor,
             ILoggerFactory loggerFactory)
         {
+            _options = optionsAccessor.Value;
+
+            if (_options.ViewLocationFormats.Count == 0)
+            {
+                throw new ArgumentException(
+                    Resources.FormatViewLocationFormatsIsRequired(nameof(RazorViewEngineOptions.ViewLocationFormats)),
+                    nameof(optionsAccessor));
+            }
+
+            if (_options.AreaViewLocationFormats.Count == 0)
+            {
+                throw new ArgumentException(
+                    Resources.FormatViewLocationFormatsIsRequired(nameof(RazorViewEngineOptions.AreaViewLocationFormats)),
+                    nameof(optionsAccessor));
+            }
+
             _pageFactory = pageFactory;
             _pageActivator = pageActivator;
             _htmlEncoder = htmlEncoder;
@@ -59,22 +75,6 @@ namespace Microsoft.AspNetCore.Mvc.Razor
             {
                 CompactOnMemoryPressure = false
             });
-
-            _options = options.Value;
-
-            if (_options.ViewLocationFormats.Count == 0)
-            {
-                throw new ArgumentException(
-                    Resources.FormatViewLocationFormatsIsRequired(nameof(RazorViewEngineOptions.ViewLocationFormats)),
-                    nameof(options));
-            }
-
-            if (_options.AreaViewLocationFormats.Count == 0)
-            {
-                throw new ArgumentException(
-                    Resources.FormatAreaViewLocationFormatsIsRequired(nameof(RazorViewEngineOptions.AreaViewLocationFormats)),
-                    nameof(options));
-            }
         }
 
         /// <summary>
@@ -361,9 +361,9 @@ namespace Microsoft.AspNetCore.Mvc.Razor
             ViewLocationCacheKey cacheKey)
         {
             // Only use the area view location formats if we have an area token.
-            var viewLocations = !string.IsNullOrEmpty(expanderContext.AreaName) ?
-                _options.AreaViewLocationFormats.AsEnumerable() :
-                _options.ViewLocationFormats.AsEnumerable();
+            IEnumerable<string> viewLocations = !string.IsNullOrEmpty(expanderContext.AreaName) ?
+                _options.AreaViewLocationFormats :
+                _options.ViewLocationFormats;
 
             for (var i = 0; i < _options.ViewLocationExpanders.Count; i++)
             {
