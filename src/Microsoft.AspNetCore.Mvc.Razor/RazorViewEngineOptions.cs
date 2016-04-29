@@ -39,14 +39,24 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// Gets the locations where <see cref="RazorViewEngine"/> will search for views.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The locations of the views returned from controllers that do not belong to an area.
         /// Locations are composite format strings (see http://msdn.microsoft.com/en-us/library/txafckwd.aspx),
         /// which may contain following indexes:
-        /// {0} - Action Name
-        /// {1} - Controller Name
+        /// </para>
+        /// <list type="bullet">
+        /// <item>
+        /// <description>{0} - Action Name</description>
+        /// </item>
+        /// <item>
+        /// <description>{1} - Controller Name</description>
+        /// </item>
+        /// </list>
+        /// <para>
         /// The values for these locations are case-sensitive on case-sensitive file systems.
         /// For example, the view for the <c>Test</c> action of <c>HomeController</c> should be located at
-        /// <c>/Views/Home/Test.cshtml</c>. Locations such as <c>/views/home/test.cshtml</c> would not be discovered
+        /// <c>/Views/Home/Test.cshtml</c>. Locations such as <c>/views/home/test.cshtml</c> would not be discovered.
+        /// </para>
         /// </remarks>
         public IList<string> ViewLocationFormats { get; } = new List<string>();
 
@@ -55,15 +65,27 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// area.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The locations of the views returned from controllers that belong to an area.
         /// Locations are composite format strings (see http://msdn.microsoft.com/en-us/library/txafckwd.aspx),
         /// which may contain following indexes:
-        /// {0} - Action Name
-        /// {1} - Controller Name
-        /// {2} - Area name
+        /// </para>
+        /// <list type="bullet">
+        /// <item>
+        /// <description>{0} - Action Name</description>
+        /// </item>
+        /// <item>
+        /// <description>{1} - Controller Name</description>
+        /// </item>
+        /// <item>
+        /// <description>{2} - Area Name</description>
+        /// </item>
+        /// </list>
+        /// <para>
         /// The values for these locations are case-sensitive on case-sensitive file systems.
         /// For example, the view for the <c>Test</c> action of <c>HomeController</c> should be located at
         /// <c>/Views/Home/Test.cshtml</c>. Locations such as <c>/views/home/test.cshtml</c> would not be discovered
+        /// </para>
         /// </remarks>
         public IList<string> AreaViewLocationFormats { get; } = new List<string>();
 
