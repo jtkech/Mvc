@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Routing;
@@ -1691,7 +1692,11 @@ namespace Microsoft.AspNetCore.Mvc.Razor.Test
             IEnumerable<string> viewLocationFormats = null,
             IEnumerable<string> areaViewLocationFormats = null)
         {
+            var optionsSetup = new RazorViewEngineOptionsSetup(Mock.Of<IHostingEnvironment>());
+
             var options = new RazorViewEngineOptions();
+            optionsSetup.Configure(options);
+
             if (expanders != null)
             {
                 foreach (var expander in expanders)

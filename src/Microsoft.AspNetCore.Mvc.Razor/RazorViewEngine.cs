@@ -27,7 +27,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
     /// </remarks>
     public class RazorViewEngine : IRazorViewEngine
     {
-        public const string ViewExtension = ".cshtml";
+        public static readonly string ViewExtension = ".cshtml";
 
         private const string ControllerKey = "controller";
         private const string AreaKey = "area";
@@ -64,12 +64,16 @@ namespace Microsoft.AspNetCore.Mvc.Razor
 
             if (_options.ViewLocationFormats.Count == 0)
             {
-                throw new InvalidOperationException(Resources.ViewLocationFormatsIsRequired);
+                throw new ArgumentException(
+                    Resources.FormatViewLocationFormatsIsRequired(nameof(RazorViewEngineOptions.ViewLocationFormats)),
+                    nameof(options));
             }
 
             if (_options.AreaViewLocationFormats.Count == 0)
             {
-                throw new InvalidOperationException(Resources.AreaViewLocationFormatsIsRequired);
+                throw new ArgumentException(
+                    Resources.FormatAreaViewLocationFormatsIsRequired(nameof(RazorViewEngineOptions.AreaViewLocationFormats)),
+                    nameof(options));
             }
         }
 
@@ -357,9 +361,9 @@ namespace Microsoft.AspNetCore.Mvc.Razor
             ViewLocationCacheKey cacheKey)
         {
             // Only use the area view location formats if we have an area token.
-            IEnumerable<string> viewLocations = !string.IsNullOrEmpty(expanderContext.AreaName) ?
-                _options.AreaViewLocationFormats :
-                _options.ViewLocationFormats;
+            var viewLocations = !string.IsNullOrEmpty(expanderContext.AreaName) ?
+                _options.AreaViewLocationFormats.AsEnumerable() :
+                _options.ViewLocationFormats.AsEnumerable();
 
             for (var i = 0; i < _options.ViewLocationExpanders.Count; i++)
             {

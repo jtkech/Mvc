@@ -19,18 +19,6 @@ namespace Microsoft.AspNetCore.Mvc.Razor
             new CSharpCompilationOptions(CodeAnalysis.OutputKind.DynamicallyLinkedLibrary);
         private Action<RoslynCompilationContext> _compilationCallback = c => { };
 
-        public RazorViewEngineOptions()
-        {
-            ViewLocationFormats = new List<string>();
-            ViewLocationFormats.Add("/Views/{1}/{0}" + RazorViewEngine.ViewExtension);
-            ViewLocationFormats.Add("/Views/Shared/{0}" + RazorViewEngine.ViewExtension);
-
-            AreaViewLocationFormats = new List<string>();
-            AreaViewLocationFormats.Add("/Areas/{2}/Views/{1}/{0}" + RazorViewEngine.ViewExtension);
-            AreaViewLocationFormats.Add("/Areas/{2}/Views/Shared/{0}" + RazorViewEngine.ViewExtension);
-            AreaViewLocationFormats.Add("/Views/Shared/{0}" + RazorViewEngine.ViewExtension);
-        }
-
         /// <summary>
         /// Gets a <see cref="IList{IViewLocationExpander}"/> used by the <see cref="RazorViewEngine"/>.
         /// </summary>
@@ -60,7 +48,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// For example, the view for the <c>Test</c> action of <c>HomeController</c> should be located at
         /// <c>/Views/Home/Test.cshtml</c>. Locations such as <c>/views/home/test.cshtml</c> would not be discovered
         /// </remarks>
-        public IList<string> ViewLocationFormats { get; }
+        public IList<string> ViewLocationFormats { get; } = new List<string>();
 
         /// <summary>
         /// Gets the locations where <see cref="RazorViewEngine"/> will search for views within an
@@ -77,7 +65,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// For example, the view for the <c>Test</c> action of <c>HomeController</c> should be located at
         /// <c>/Views/Home/Test.cshtml</c>. Locations such as <c>/views/home/test.cshtml</c> would not be discovered
         /// </remarks>
-        public IList<string> AreaViewLocationFormats { get; }
+        public IList<string> AreaViewLocationFormats { get; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the callback that is used to customize Razor compilation

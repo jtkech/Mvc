@@ -463,7 +463,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         }
 
         /// <summary>
-        /// AreaViewLocationFormats cannot be empty and is required to locate a view for rendering.
+        /// '{0}' cannot be empty. These locations are required to locate a view for rendering.
         /// </summary>
         internal static string AreaViewLocationFormatsIsRequired
         {
@@ -471,15 +471,15 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         }
 
         /// <summary>
-        /// AreaViewLocationFormats cannot be empty and is required to locate a view for rendering.
+        /// '{0}' cannot be empty. These locations are required to locate a view for rendering.
         /// </summary>
-        internal static string FormatAreaViewLocationFormatsIsRequired()
+        internal static string FormatAreaViewLocationFormatsIsRequired(object p0)
         {
-            return GetString("AreaViewLocationFormatsIsRequired");
+            return string.Format(CultureInfo.CurrentCulture, GetString("AreaViewLocationFormatsIsRequired"), p0);
         }
 
         /// <summary>
-        /// ViewLocationFormats cannot be empty and is required to locate a view for rendering.
+        /// '{0}' cannot be empty. These locations are required to locate a view for rendering.
         /// </summary>
         internal static string ViewLocationFormatsIsRequired
         {
@@ -487,11 +487,11 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         }
 
         /// <summary>
-        /// ViewLocationFormats cannot be empty and is required to locate a view for rendering.
+        /// '{0}' cannot be empty. These locations are required to locate a view for rendering.
         /// </summary>
-        internal static string FormatViewLocationFormatsIsRequired()
+        internal static string FormatViewLocationFormatsIsRequired(object p0)
         {
-            return GetString("ViewLocationFormatsIsRequired");
+            return string.Format(CultureInfo.CurrentCulture, GetString("ViewLocationFormatsIsRequired"), p0);
         }
 
         private static string GetString(string name, params string[] formatterNames)

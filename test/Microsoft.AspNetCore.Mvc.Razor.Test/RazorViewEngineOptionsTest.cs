@@ -17,12 +17,12 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         {
             // Arrange
             var services = new ServiceCollection().AddOptions();
-            var areaViewLocations = new string[]
+            var areaViewLocations = new[]
             {
-                "/Areas/{2}/Views/{1}/{0}.cshtml",
-                "/Areas/{2}/Views/Shared/{0}.cshtml",
-                "/Views/Shared/{0}.cshtml"
-            };
+                "/Areas/{2}/MvcViews/{1}/{0}.cshtml",
+                "/Areas/{2}/MvcViews/Shared/{0}.cshtml",
+                "/MvcViews/Shared/{0}.cshtml"
+            }.AsEnumerable();
 
             // Act
             var builder = new MvcBuilder(services, new ApplicationPartManager());
@@ -39,7 +39,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
 
             // Assert
             var accessor = serviceProvider.GetRequiredService<IOptions<RazorViewEngineOptions>>();
-            Assert.Equal(areaViewLocations, accessor.Value.AreaViewLocationFormats.ToArray());
+            Assert.Equal(areaViewLocations, accessor.Value.AreaViewLocationFormats);
         }
 
         [Fact]
@@ -47,11 +47,11 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         {
             // Arrange
             var services = new ServiceCollection().AddOptions();
-            var viewLocations = new string[]
+            var viewLocations = new []
             {
-                "/Views/{1}/{0}.cshtml",
-                "/Views/Shared/{0}.cshtml"
-            };
+                "/MvcViews/{1}/{0}.cshtml",
+                "/MvcViews/Shared/{0}.cshtml"
+            }.AsEnumerable();
 
             // Act
             var builder = new MvcBuilder(services, new ApplicationPartManager());
@@ -68,7 +68,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
 
             // Assert
             var accessor = serviceProvider.GetRequiredService<IOptions<RazorViewEngineOptions>>();
-            Assert.Equal(viewLocations, accessor.Value.ViewLocationFormats.ToArray());
+            Assert.Equal(viewLocations, accessor.Value.ViewLocationFormats);
         }
 
         [Fact]
