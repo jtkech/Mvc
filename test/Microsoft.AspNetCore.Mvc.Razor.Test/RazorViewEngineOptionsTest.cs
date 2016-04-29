@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Internal;
@@ -23,8 +24,6 @@ namespace Microsoft.AspNetCore.Mvc.Razor
                 "/Areas/{2}/MvcViews/Shared/{0}.cshtml",
                 "/MvcViews/Shared/{0}.cshtml"
             };
-
-            // Act
             var builder = new MvcBuilder(services, new ApplicationPartManager());
             builder.AddRazorOptions(options =>
             {
@@ -37,9 +36,11 @@ namespace Microsoft.AspNetCore.Mvc.Razor
             });
             var serviceProvider = services.BuildServiceProvider();
 
-            // Assert
+            // Act
             var accessor = serviceProvider.GetRequiredService<IOptions<RazorViewEngineOptions>>();
-            Assert.Equal(areaViewLocations, accessor.Value.AreaViewLocationFormats.ToArray());
+
+            // Assert
+            Assert.Equal(areaViewLocations, accessor.Value.AreaViewLocationFormats, StringComparer.Ordinal);
         }
 
         [Fact]
@@ -52,8 +53,6 @@ namespace Microsoft.AspNetCore.Mvc.Razor
                 "/MvcViews/{1}/{0}.cshtml",
                 "/MvcViews/Shared/{0}.cshtml"
             };
-
-            // Act
             var builder = new MvcBuilder(services, new ApplicationPartManager());
             builder.AddRazorOptions(options =>
             {
@@ -66,9 +65,11 @@ namespace Microsoft.AspNetCore.Mvc.Razor
             });
             var serviceProvider = services.BuildServiceProvider();
 
-            // Assert
+            // Act
             var accessor = serviceProvider.GetRequiredService<IOptions<RazorViewEngineOptions>>();
-            Assert.Equal(viewLocations, accessor.Value.ViewLocationFormats.ToArray());
+
+            // Assert
+            Assert.Equal(viewLocations, accessor.Value.ViewLocationFormats, StringComparer.Ordinal);
         }
 
         [Fact]
