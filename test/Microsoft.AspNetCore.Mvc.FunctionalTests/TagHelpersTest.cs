@@ -88,7 +88,7 @@ namespace Microsoft.AspNetCore.Mvc.FunctionalTests
         }
 
         [Fact]
-        public async Task ReregisteringAntiforgeryTokenInsideFormTagHelper_DoesNotAddDuplicateAntifogeryTokenFields()
+        public async Task ReregisteringAntiforgeryTokenInsideFormTagHelper_DoesNotAddDuplicateAntiforgeryTokenFields()
         {
             // Arrange
             var expectedMediaType = MediaTypeHeaderValue.Parse("text/html; charset=utf-8");
@@ -97,7 +97,6 @@ namespace Microsoft.AspNetCore.Mvc.FunctionalTests
                 await ResourceFile.ReadResourceAsync(_resourcesAssembly, outputFile, sourceFile: false);
 
             // Act
-            // The host is not important as everything runs in memory and tests are isolated from each other.
             var response = await Client.GetAsync("http://localhost/Employee/DuplicateAntiforgeryTokenRegistration");
             var responseContent = await response.Content.ReadAsStringAsync();
 
