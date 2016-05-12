@@ -42,7 +42,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// <para>
         /// The locations of the views returned from controllers that do not belong to an area.
         /// Locations are composite format strings (see http://msdn.microsoft.com/en-us/library/txafckwd.aspx),
-        /// which may contain following indexes:
+        /// which may contain the following format items:
         /// </para>
         /// <list type="bullet">
         /// <item>
@@ -68,7 +68,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// <para>
         /// The locations of the views returned from controllers that belong to an area.
         /// Locations are composite format strings (see http://msdn.microsoft.com/en-us/library/txafckwd.aspx),
-        /// which may contain following indexes:
+        /// which may contain the following format items:
         /// </para>
         /// <list type="bullet">
         /// <item>
@@ -83,8 +83,9 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         /// </list>
         /// <para>
         /// The values for these locations are case-sensitive on case-sensitive file systems.
-        /// For example, the view for the <c>Test</c> action of <c>HomeController</c> should be located at
-        /// <c>/Views/Home/Test.cshtml</c>. Locations such as <c>/views/home/test.cshtml</c> would not be discovered
+        /// For example, the view for the <c>Test</c> action of <c>HomeController</c> under <c>Admin</c> area should
+        /// be located at <c>/Areas/Admin/Views/Home/Test.cshtml</c>.
+        /// Locations such as <c>/areas/admin/views/home/test.cshtml</c> would not be discovered.
         /// </para>
         /// </remarks>
         public IList<string> AreaViewLocationFormats { get; } = new List<string>();

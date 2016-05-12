@@ -16,7 +16,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         [Fact]
         public void AreaViewLocationFormats_ContainsExpectedLocations()
         {
-            // Arrange
+            // Arrange & Act
             var services = new ServiceCollection().AddOptions();
             var areaViewLocations = new[]
             {
@@ -35,8 +35,6 @@ namespace Microsoft.AspNetCore.Mvc.Razor
                 }
             });
             var serviceProvider = services.BuildServiceProvider();
-
-            // Act
             var accessor = serviceProvider.GetRequiredService<IOptions<RazorViewEngineOptions>>();
 
             // Assert
@@ -46,7 +44,7 @@ namespace Microsoft.AspNetCore.Mvc.Razor
         [Fact]
         public void ViewLocationFormats_ContainsExpectedLocations()
         {
-            // Arrange
+            // Arrange & Act
             var services = new ServiceCollection().AddOptions();
             var viewLocations = new []
             {
@@ -64,8 +62,6 @@ namespace Microsoft.AspNetCore.Mvc.Razor
                 }
             });
             var serviceProvider = services.BuildServiceProvider();
-
-            // Act
             var accessor = serviceProvider.GetRequiredService<IOptions<RazorViewEngineOptions>>();
 
             // Assert

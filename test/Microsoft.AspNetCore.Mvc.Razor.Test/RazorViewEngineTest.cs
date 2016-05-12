@@ -1677,14 +1677,10 @@ namespace Microsoft.AspNetCore.Mvc.Razor.Test
 
         private TestableRazorViewEngine CreateViewEngine(
             IRazorPageFactoryProvider pageFactory = null,
-            IEnumerable<IViewLocationExpander> expanders = null,
-            IEnumerable<string> viewLocationFormats = null,
-            IEnumerable<string> areaViewLocationFormats = null)
+            IEnumerable<IViewLocationExpander> expanders = null)
         {
             pageFactory = pageFactory ?? Mock.Of<IRazorPageFactoryProvider>();
-            return new TestableRazorViewEngine(
-                pageFactory,
-                GetOptionsAccessor(expanders, viewLocationFormats, areaViewLocationFormats));
+            return new TestableRazorViewEngine(pageFactory, GetOptionsAccessor(expanders));
         }
 
         private static IOptions<RazorViewEngineOptions> GetOptionsAccessor(
