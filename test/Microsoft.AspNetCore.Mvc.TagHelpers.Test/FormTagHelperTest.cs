@@ -101,18 +101,19 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
         }
 
         [Theory]
-        [InlineData(null, FormMethod.Post, "<input />")]
-        [InlineData(true, FormMethod.Post, "<input />")]
-        [InlineData(false, FormMethod.Post, "")]
-        [InlineData(null, FormMethod.Get, "")]
-        [InlineData(true, FormMethod.Get, "<input />")]
-        [InlineData(false, FormMethod.Get, "")]
+        [InlineData(null, FormMethod.Post, true)]
+        [InlineData(true, FormMethod.Post, true)]
+        [InlineData(false, FormMethod.Post, false)]
+        [InlineData(null, FormMethod.Get, false)]
+        [InlineData(true, FormMethod.Get, true)]
+        [InlineData(false, FormMethod.Get, false)]
         public async Task ProcessAsync_GeneratesAntiforgeryCorrectly(
             bool? antiforgery,
             FormMethod method,
-            string expectedPostContent)
+            bool postContentHasAntiforgeryToken)
         {
             // Arrange
+            var expectedPostContent = postContentHasAntiforgeryToken ? "<input />" : "";
             var viewContext = CreateViewContext();
             var expectedAttribute = new TagHelperAttribute("method", method.ToString().ToLowerInvariant());
             var context = new TagHelperContext(
@@ -159,6 +160,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.Equal(expectedAttribute, attribute);
             Assert.Empty(output.PreContent.GetContent());
             Assert.True(output.Content.GetContent().Length == 0);
+            Assert.Equal(postContentHasAntiforgeryToken, viewContext.FormContext.HasAntiforgeryToken);
             Assert.Equal(expectedPostContent, output.PostContent.GetContent());
         }
 
@@ -231,6 +233,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.Empty(output.PreContent.GetContent());
             Assert.True(output.Content.GetContent().Length == 0);
             Assert.Empty(output.PostContent.GetContent());
+            Assert.False(testViewContext.FormContext.HasAntiforgeryToken);
             generator.Verify();
         }
 
@@ -283,6 +286,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.Empty(output.PreContent.GetContent());
             Assert.True(output.Content.GetContent().Length == 0);
             Assert.Empty(output.PostContent.GetContent());
+            Assert.False(viewContext.FormContext.HasAntiforgeryToken);
         }
 
         [Fact]
@@ -339,6 +343,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.Empty(output.PreContent.GetContent());
             Assert.True(output.Content.GetContent().Length == 0);
             Assert.Empty(output.PostContent.GetContent());
+            Assert.False(viewContext.FormContext.HasAntiforgeryToken);
         }
 
         [Fact]
@@ -395,6 +400,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.Empty(output.PreContent.GetContent());
             Assert.True(output.Content.GetContent().Length == 0);
             Assert.Empty(output.PostContent.GetContent());
+            Assert.False(viewContext.FormContext.HasAntiforgeryToken);
         }
 
         [Fact]
@@ -452,6 +458,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.Empty(output.PreContent.GetContent());
             Assert.True(output.Content.GetContent().Length == 0);
             Assert.Empty(output.PostContent.GetContent());
+            Assert.False(viewContext.FormContext.HasAntiforgeryToken);
         }
 
         [Fact]
@@ -506,17 +513,19 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.True(output.Content.GetContent().Length == 0);
             Assert.Empty(output.PostContent.GetContent());
             Assert.Empty(output.PostElement.GetContent());
+            Assert.False(viewContext.FormContext.HasAntiforgeryToken);
         }
 
         [Theory]
-        [InlineData(true, "<input />")]
-        [InlineData(false, "")]
-        [InlineData(null, "")]
+        [InlineData(true, true)]
+        [InlineData(false, false)]
+        [InlineData(null, false)]
         public async Task ProcessAsync_SupportsAntiforgeryIfActionIsSpecified(
             bool? antiforgery,
-            string expectedPostContent)
+            bool postContentHasAntiforgeryToken)
         {
             // Arrange
+            var expectedPostContent = postContentHasAntiforgeryToken ? "<input />" : "";
             var viewContext = CreateViewContext();
             var generator = new Mock<IHtmlGenerator>();
 
@@ -558,6 +567,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.Empty(output.PreContent.GetContent());
             Assert.True(output.Content.GetContent().Length == 0);
             Assert.Equal(expectedPostContent, output.PostContent.GetContent());
+            Assert.Equal(postContentHasAntiforgeryToken, viewContext.FormContext.HasAntiforgeryToken);
         }
 
         [Theory]
