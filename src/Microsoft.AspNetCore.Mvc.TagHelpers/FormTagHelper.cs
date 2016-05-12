@@ -240,7 +240,6 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
                 var antiforgeryTag = Generator.GenerateAntiforgery(ViewContext);
                 if (antiforgeryTag != null)
                 {
-                    ViewContext.FormContext.HasAntiforgeryToken = true;
                     output.PostContent.AppendHtml(antiforgeryTag);
                 }
             }

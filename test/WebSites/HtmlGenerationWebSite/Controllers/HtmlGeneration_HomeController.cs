@@ -200,5 +200,10 @@ namespace HtmlGenerationWebSite.Controllers
         {
             return View();
         }
+
+        public IActionResult DuplicateAntiforgeryTokenRegistration()
+        {
+            return View();
+        }
     }
 }

@@ -1,0 +1,19 @@
+﻿@{
+    Layout = null;
+}
+<html>
+<body>
+@* BeginForm/BeginRouteForm already register antiforgery tokens. The Html helper calls should be no-op *@
+@using (Html.BeginForm(antiforgery: true, actionName: "action1", controllerName: "controller1", method: FormMethod.Post, routeValues: null, htmlAttributes: null))
+{
+    @Html.AntiForgeryToken()
+}
+
+@using (@Html.BeginRouteForm(routeName: "default", antiforgery: true, routeValues: new { action = "action2", controller = "controller2" }, method: FormMethod.Post, htmlAttributes: null))
+{
+    @Html.AntiForgeryToken()
+}
+
+</body>
+</html>
+

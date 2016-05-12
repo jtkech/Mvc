@@ -530,6 +530,43 @@ Products: Music Systems, Televisions (3)";
             Assert.Equal(expected, response);
         }
 
+        [Fact]
+        public async Task ReregisteringAntiforgeryInBeginFormAndBeginRouteForm_DoesNotAddDuplicateAntiforgeryTokens()
+        {
+            // Arrange
+            var expectedMediaType = MediaTypeHeaderValue.Parse("text/html; charset=utf-8");
+            var outputFile = "compiler/resources/HtmlGenerationWebSite.HtmlGeneration_Home.DuplicateAntiforgeryTokenRegistration.html";
+            var expectedContent =
+                await ResourceFile.ReadResourceAsync(_resourcesAssembly, outputFile, sourceFile: false);
+
+            // Act
+            var response = await Client.GetAsync("http://localhost/HtmlGeneration_Home/DuplicateAntiforgeryTokenRegistration");
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(expectedMediaType, response.Content.Headers.ContentType);
+
+            responseContent = responseContent.Trim();
+
+            var beginFormAntiforgeryToken = AntiforgeryTestHelper.RetrieveAntiforgeryToken(responseContent, "/controller1/action1");
+            var beginRouteFormAntiforgeryToken = AntiforgeryTestHelper.RetrieveAntiforgeryToken(responseContent, "/controller2/action2");
+
+#if GENERATE_BASELINES
+                // Reverse usual substitution and insert a format item into the new file content.
+                responseContent = responseContent.Replace(beginFormAntiforgeryToken, "{0}");
+                responseContent = responseContent.Replace(beginRouteFormAntiforgeryToken, "{1}");
+                ResourceFile.UpdateFile(_resourcesAssembly, outputFile, expectedContent, responseContent);
+#else
+            expectedContent = string.Format(expectedContent, beginFormAntiforgeryToken, beginRouteFormAntiforgeryToken);
+            // Mono issue - https://github.com/aspnet/External/issues/19
+            Assert.Equal(
+                PlatformNormalizer.NormalizeContent(expectedContent.Trim()),
+                responseContent,
+                ignoreLineEndingDifferences: true);
+#endif
+        }
+
         private static HttpRequestMessage RequestWithLocale(string url, string locale)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, url);
