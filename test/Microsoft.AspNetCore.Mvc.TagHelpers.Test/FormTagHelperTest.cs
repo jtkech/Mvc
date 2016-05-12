@@ -93,6 +93,7 @@ namespace Microsoft.AspNetCore.Mvc.TagHelpers
             Assert.Equal("post", attribute.Value);
             attribute = Assert.Single(output.Attributes, attr => attr.Name.Equals("action"));
             Assert.Equal("home/index", attribute.Value);
+            Assert.True(viewContext.FormContext.HasAntiforgeryToken);
             Assert.Empty(output.PreContent.GetContent());
             Assert.True(output.Content.GetContent().Length == 0);
             Assert.Equal(expectedPostContent, output.PostContent.GetContent());
