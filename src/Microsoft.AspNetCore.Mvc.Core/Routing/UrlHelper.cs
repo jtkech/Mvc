@@ -233,6 +233,13 @@ namespace Microsoft.AspNetCore.Mvc.Routing
             // VirtualPathData.VirtualPath returns string.Empty instead of null.
             Debug.Assert(pathData.VirtualPath != null);
 
+            var url = FastGetUrl(protocol, host, pathData, fragment);
+
+            if (!string.IsNullOrEmpty(url))
+            {
+                return url;
+            }
+
             var builder = GetStringBuilder();
             try
             {
@@ -265,6 +272,34 @@ namespace Microsoft.AspNetCore.Mvc.Routing
                 // Clear the StringBuilder so that it can reused for the next call.
                 builder.Clear();
             }
+        }
+
+        private string FastGetUrl(
+            string protocol, 
+            string host, 
+            VirtualPathData pathData, 
+            string fragment)
+        {
+            if (string.IsNullOrEmpty(protocol) 
+                && string.IsNullOrEmpty(host) 
+                && string.IsNullOrEmpty(fragment))
+            {
+                var pathBase = HttpContext.Request.PathBase;
+
+                if (!pathBase.HasValue)
+                {
+                    if (pathData.VirtualPath.Length == 0)
+                    {
+                        return "/";
+                    }
+                    else if (pathData.VirtualPath.StartsWith("/", StringComparison.Ordinal))
+                    {
+                        return pathData.VirtualPath;
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }
