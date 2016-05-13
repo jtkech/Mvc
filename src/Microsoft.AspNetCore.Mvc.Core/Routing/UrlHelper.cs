@@ -233,9 +233,12 @@ namespace Microsoft.AspNetCore.Mvc.Routing
             // VirtualPathData.VirtualPath returns string.Empty instead of null.
             Debug.Assert(pathData.VirtualPath != null);
 
-            var url = FastGetUrl(protocol, host, pathData, fragment);
+            // Perf: In most of the common cases, GenerateUrl is called with a null protocol, host and fragment. 
+            // In such cases, we might not need to build any Url as the url generated is mostly same as the virtual path available in pathData.
+            // For such common cases, this FastGenerateUrl method saves a string allocation per GenerateUrl call.
+            var url = FastGenerateUrl(protocol, host, pathData, fragment);
 
-            if (!string.IsNullOrEmpty(url))
+            if (url != null)
             {
                 return url;
             }
@@ -274,28 +277,26 @@ namespace Microsoft.AspNetCore.Mvc.Routing
             }
         }
 
-        private string FastGetUrl(
+        private string FastGenerateUrl(
             string protocol, 
             string host, 
             VirtualPathData pathData, 
             string fragment)
         {
+            var pathBase = HttpContext.Request.PathBase;
+
             if (string.IsNullOrEmpty(protocol) 
                 && string.IsNullOrEmpty(host) 
-                && string.IsNullOrEmpty(fragment))
+                && string.IsNullOrEmpty(fragment)
+                && !pathBase.HasValue)
             {
-                var pathBase = HttpContext.Request.PathBase;
-
-                if (!pathBase.HasValue)
+                if (pathData.VirtualPath.Length == 0)
                 {
-                    if (pathData.VirtualPath.Length == 0)
-                    {
-                        return "/";
-                    }
-                    else if (pathData.VirtualPath.StartsWith("/", StringComparison.Ordinal))
-                    {
-                        return pathData.VirtualPath;
-                    }
+                    return "/";
+                }
+                else if (pathData.VirtualPath.StartsWith("/", StringComparison.Ordinal))
+                {
+                    return pathData.VirtualPath;
                 }
             }
 
