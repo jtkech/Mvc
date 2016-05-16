@@ -573,12 +573,36 @@ namespace Microsoft.AspNetCore.Mvc.Internal
 
                         _logger.ActionMethodExecuting(_actionExecutingContext, arguments);
 
-                        var actionReturnValue = await ControllerActionExecutor.ExecuteAsync(
-                            _executor,
-                            _controller,
-                            arguments);
+                        //var actionReturnValue = await ControllerActionExecutor.ExecuteAsync(
+                        //    _executor,
+                        //    _controller,
+                        //    arguments);
 
-                        result = CreateActionResult( actionMethodInfo.ReturnType, actionReturnValue);
+                        //result = CreateActionResult( actionMethodInfo.ReturnType, actionReturnValue);
+
+                        var returnType = _executor.MethodInfo.ReturnType;
+
+                        object resultObject;
+
+                        if (_executor.TaskGenericType == null || _executor.TaskGenericType == typeof(IActionResult))
+                        {
+                            resultObject = _executor.Execute(_controller, arguments);
+
+                            if (returnType == typeof(Task))
+                            {
+                                await (Task)resultObject;
+                            }
+                            else if (_executor.TaskGenericType == typeof(IActionResult))
+                            {
+                                resultObject = await (Task<IActionResult>)resultObject;
+                            }
+                        }
+                        else
+                        {
+                            resultObject = await _executor.ExecuteAsync(_controller, arguments);
+                        }
+
+                        var actionResult = CreateActionResult(_executor, resultObject);
 
                         _logger.ActionMethodExecuted(_actionExecutingContext, result);
                     }
@@ -774,8 +798,9 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         }
 
         // Marking as internal for Unit Testing purposes.
-        internal static IActionResult CreateActionResult(Type declaredReturnType, object actionReturnValue)
+        internal static IActionResult CreateActionResult(ObjectMethodExecutor actionMethodExecutor, object actionReturnValue)
         {
+            var declaredReturnType = actionMethodExecutor.MethodInfo.ReturnType;
             if (declaredReturnType == null)
             {
                 throw new ArgumentNullException(nameof(declaredReturnType));
@@ -795,7 +820,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
             }
 
             // Unwrap potential Task<T> types.
-            var actualReturnType = GetTaskInnerTypeOrNull(declaredReturnType) ?? declaredReturnType;
+            var actualReturnType = actionMethodExecutor.TaskGenericType ?? declaredReturnType;
             if (actionReturnValue == null &&
                 typeof(IActionResult).IsAssignableFrom(actualReturnType))
             {
