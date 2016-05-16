@@ -22,17 +22,6 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         private static readonly MethodInfo _convertOfTMethod =
             typeof(ObjectMethodExecutor).GetRuntimeMethods().Single(methodInfo => methodInfo.Name == nameof(ObjectMethodExecutor.Convert));
 
-        //private static readonly Expression<Func<object, Task<object>>> _createTaskFromResultExpression =
-        //    ((result) => Task.FromResult(result));
-
-        //private static readonly MethodInfo _createTaskFromResultMethod = 
-        //    ((MethodCallExpression)_createTaskFromResultExpression.Body).Method;
-
-        //private static readonly Expression<Func<object, string, Type, Task<object>>> _coerceTaskExpression =
-        //    ((result, methodName, declaringType) => ObjectMethodExecutor.CoerceTaskType(result, methodName, declaringType));
-
-        //private static readonly MethodInfo _coerceMethod = ((MethodCallExpression)_coerceTaskExpression.Body).Method;
-
         private ObjectMethodExecutor(MethodInfo methodInfo, TypeInfo targetTypeInfo)
         {            
             if (methodInfo == null)
@@ -44,7 +33,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
             ActionParameters = methodInfo.GetParameters();
         }
 
-        private delegate Task<object> ActionExecutorAsync(object target, object[] parameters);
+        private delegate Task<IActionResult> ActionExecutorAsync(object target, object[] parameters);
 
         private delegate object ActionExecutor(object target, object[] parameters);
 
@@ -58,13 +47,19 @@ namespace Microsoft.AspNetCore.Mvc.Internal
 
         public Type TaskGenericType { get; set; }
 
-        private ActionExecutorAsync TaskOfTActionExecutorAsync
+        public Type MethodReturnType { get; set; }
+
+        public bool IsMethodAsync { get; set; }
+
+        public bool IsTypeAssignableFromIActionResult { get; set; }
+
+        private ActionExecutorAsync ControllerActionExecutorAsync
         {
             get
             {
                 if (_executorAsync == null)
                 {
-                    _executorAsync = GetTaskOfTExecutorAsync(TaskGenericType, MethodInfo, TargetTypeInfo);
+                    _executorAsync = GetExecutorAsync(TaskGenericType, MethodInfo, TargetTypeInfo);
                 }
 
                 return _executorAsync;
@@ -74,14 +69,17 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         public static ObjectMethodExecutor Create(MethodInfo methodInfo, TypeInfo targetTypeInfo)
         {
             var executor = new ObjectMethodExecutor(methodInfo, targetTypeInfo);
-            executor.TaskGenericType = GetTaskInnerTypeOrNull(methodInfo.ReturnType);
+            executor.MethodReturnType = methodInfo.ReturnType;
+            executor.IsMethodAsync = typeof(Task).IsAssignableFrom(executor.MethodReturnType);
+            executor.TaskGenericType = GetTaskInnerTypeOrNull(executor.MethodReturnType);
+            executor.IsTypeAssignableFromIActionResult = typeof(IActionResult).IsAssignableFrom(executor.MethodReturnType);
             executor._executor = GetExecutor(methodInfo, targetTypeInfo);
             return executor;
         }
 
-        public Task<object> ExecuteAsync(object target, object[] parameters)
+        public Task<IActionResult> ExecuteAsync(object target, object[] parameters)
         {
-            return TaskOfTActionExecutorAsync(target, parameters);
+            return ControllerActionExecutorAsync(target, parameters);
         }
 
         public object Execute(object target, object[] parameters)
@@ -150,7 +148,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
             };
         }
 
-        private static ActionExecutorAsync GetTaskOfTExecutorAsync(Type taskInnerType, MethodInfo methodInfo, TypeInfo targetTypeInfo)
+        private static ActionExecutorAsync GetExecutorAsync(Type taskInnerType, MethodInfo methodInfo, TypeInfo targetTypeInfo)
         {
             if (taskInnerType == null)
             {
@@ -189,7 +187,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         // We need to CoerceResult as the object value returned from methodInfo.Invoke has to be cast to a Task<T>.
         // This is necessary to enable calling await on the returned task.
         // i.e we need to write the following var result = await (Task<ActualType>)mInfo.Invoke.
-        // Returning Task<object> enables us to await on the result.
+        // Returning Task<IActionResult> enables us to await on the result.
         private static Expression GetCoerceMethodCallExpression(
             Type taskValueType,
             MethodCallExpression methodCall,
@@ -197,38 +195,49 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         {
             var castMethodCall = Expression.Convert(methodCall, typeof(object));
             // for: public Task<T> Action()
-            // constructs: return (Task<object>)Convert<T>((Task<T>)result)
+            // constructs: return (Task<IActionResult>)Convert<T>((Task<T>)result)
             var genericMethodInfo = _convertOfTMethod.MakeGenericMethod(taskValueType);
             var genericMethodCall = Expression.Call(null, genericMethodInfo, castMethodCall);
-            var convertedResult = Expression.Convert(genericMethodCall, typeof(Task<object>));
+            var convertedResult = Expression.Convert(genericMethodCall, typeof(Task<IActionResult>));
             return convertedResult;
         }
 
         /// <summary>
-        /// Cast Task of T to Task of object
+        /// Cast Task of T to Task of IActionResult
         /// </summary>
-        private static async Task<object> CastToObject<T>(Task<T> task)
+        private static async Task<IActionResult> CastToIActionResult<T>(Task<T> task)
         {
-            return (object)await task;
+            var resultAsObject = await task;
+
+            var result = resultAsObject as IActionResult;
+
+            if (result != null)
+            {
+                return result;
+            }
+
+            if (!typeof(IActionResult).IsAssignableFrom(typeof(T)))
+            {
+                return new ObjectResult(resultAsObject)
+                {
+                    DeclaredType = typeof(T)
+                };
+            }
+
+            return null;
         }
 
         private static Type GetTaskInnerTypeOrNull(Type type)
         {
-            if (typeof(Task) == type ||
-                !typeof(Task).IsAssignableFrom(type))
-            {
-                return null;
-            }
-
             var genericType = ClosedGenericMatcher.ExtractGenericInterface(type, typeof(Task<>));
 
             return genericType?.GenericTypeArguments[0];
         }
 
-        private static Task<object> Convert<T>(object taskAsObject)
+        private static Task<IActionResult> Convert<T>(object taskAsObject)
         {
             var task = (Task<T>)taskAsObject;
-            return CastToObject<T>(task);
+            return CastToIActionResult<T>(task);
         }
 
         private void EnsureParameterDefaultValues()

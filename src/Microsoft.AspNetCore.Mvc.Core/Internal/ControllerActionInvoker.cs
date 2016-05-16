@@ -573,36 +573,52 @@ namespace Microsoft.AspNetCore.Mvc.Internal
 
                         _logger.ActionMethodExecuting(_actionExecutingContext, arguments);
 
-                        //var actionReturnValue = await ControllerActionExecutor.ExecuteAsync(
-                        //    _executor,
-                        //    _controller,
-                        //    arguments);
+                        var returnType = _executor.MethodReturnType;
 
-                        //result = CreateActionResult( actionMethodInfo.ReturnType, actionReturnValue);
-
-                        var returnType = _executor.MethodInfo.ReturnType;
-
-                        object resultObject;
-
-                        if (_executor.TaskGenericType == null || _executor.TaskGenericType == typeof(IActionResult))
+                        if (returnType == typeof(void))
                         {
-                            resultObject = _executor.Execute(_controller, arguments);
-
-                            if (returnType == typeof(Task))
+                            _executor.Execute(_controller, arguments);
+                            result = new EmptyResult();
+                        }
+                        else if (returnType == typeof(IActionResult) ||
+                            _executor.IsTypeAssignableFromIActionResult)
+                        {
+                            result = (IActionResult)_executor.Execute(_controller, arguments);
+                        }
+                        else if (returnType == typeof(Task))
+                        {
+                            await (Task)_executor.Execute(_controller, arguments);
+                            result = new EmptyResult();
+                        }
+                        else if (_executor.TaskGenericType == typeof(IActionResult))
+                        {
+                            result = await (Task<IActionResult>)_executor.Execute(_controller, arguments);
+                        }
+                        else if (_executor.TaskGenericType != null)
+                        {
+                            result = await _executor.ExecuteAsync(_controller, arguments);
+                        }
+                        else if (!_executor.IsMethodAsync)
+                        {
+                            var resultAsObject = _executor.Execute(_controller, arguments);
+                            result = new ObjectResult(resultAsObject)
                             {
-                                await (Task)resultObject;
-                            }
-                            else if (_executor.TaskGenericType == typeof(IActionResult))
-                            {
-                                resultObject = await (Task<IActionResult>)resultObject;
-                            }
+                                DeclaredType = returnType,
+                            };
                         }
                         else
                         {
-                            resultObject = await _executor.ExecuteAsync(_controller, arguments);
+                            // This will be the case for types which have derived from Task and Task<T> or non Task types.
+                            throw new InvalidOperationException(Resources.FormatActionExecutor_UnexpectedTaskInstance(
+                                _executor.MethodInfo.Name,
+                                _executor.MethodInfo.DeclaringType));
                         }
 
-                        var actionResult = CreateActionResult(_executor, resultObject);
+                        if (result == null)
+                        {
+                            throw new InvalidOperationException(
+                                Resources.FormatActionResult_ActionReturnValueCannotBeNull(_executor.TaskGenericType ?? _executor.MethodReturnType));
+                        }
 
                         _logger.ActionMethodExecuted(_actionExecutingContext, result);
                     }
