@@ -1864,6 +1864,64 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         }
 
         [Fact]
+        public async Task AddingValueProviderFactory_AtResourceFilter_IsAvailableInControllerContext()
+        {
+            // Arrange
+            var valueProviderFactory2 = Mock.Of<IValueProviderFactory>();
+            var resourceFilter = new Mock<IResourceFilter>();
+            resourceFilter
+                .Setup(f => f.OnResourceExecuting(It.IsAny<ResourceExecutingContext>()))
+                .Callback<ResourceExecutingContext>((resourceExecutingContext) =>
+                {
+                    resourceExecutingContext.ValueProviderFactories.Add(valueProviderFactory2);
+                });
+            var valueProviderFactory1 = Mock.Of<IValueProviderFactory>();
+            var valueProviderFactories = new List<IValueProviderFactory>();
+            valueProviderFactories.Add(valueProviderFactory1);
+
+            var invoker = CreateInvoker(
+                new IFilterMetadata[] { resourceFilter.Object }, valueProviderFactories: valueProviderFactories);
+
+            // Act
+            await invoker.InvokeAsync();
+
+            // Assert
+            var controllerContext = invoker.ControllerFactory.ControllerContext;
+            Assert.Equal(2, controllerContext.ValueProviderFactories.Count);
+            Assert.Same(valueProviderFactory1, controllerContext.ValueProviderFactories[0]);
+            Assert.Same(valueProviderFactory2, controllerContext.ValueProviderFactories[1]);
+        }
+
+        [Fact]
+        public async Task DeletingValueProviderFactory_AtResourceFilter_IsNotAvailableInControllerContext()
+        {
+            // Arrange
+            var resourceFilter = new Mock<IResourceFilter>();
+            resourceFilter
+                .Setup(f => f.OnResourceExecuting(It.IsAny<ResourceExecutingContext>()))
+                .Callback<ResourceExecutingContext>((resourceExecutingContext) =>
+                {
+                    resourceExecutingContext.ValueProviderFactories.RemoveAt(0);
+                });
+            var valueProviderFactory1 = Mock.Of<IValueProviderFactory>();
+            var valueProviderFactory2 = Mock.Of<IValueProviderFactory>();
+            var valueProviderFactories = new List<IValueProviderFactory>();
+            valueProviderFactories.Add(valueProviderFactory1);
+            valueProviderFactories.Add(valueProviderFactory2);
+
+            var invoker = CreateInvoker(
+                new IFilterMetadata[] { resourceFilter.Object }, valueProviderFactories: valueProviderFactories);
+
+            // Act
+            await invoker.InvokeAsync();
+
+            // Assert
+            var controllerContext = invoker.ControllerFactory.ControllerContext;
+            Assert.Equal(1, controllerContext.ValueProviderFactories.Count);
+            Assert.Same(valueProviderFactory2, controllerContext.ValueProviderFactories[0]);
+        }
+
+        [Fact]
         public void CreateActionResult_ReturnsSameActionResult()
         {
             // Arrange
@@ -1957,7 +2015,8 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         private TestControllerActionInvoker CreateInvoker(
             IFilterMetadata[] filters,
             bool actionThrows = false,
-            int maxAllowedErrorsInModelState = 200)
+            int maxAllowedErrorsInModelState = 200,
+            List<IValueProviderFactory> valueProviderFactories = null)
         {
             var actionDescriptor = new ControllerActionDescriptor()
             {
@@ -2049,6 +2108,11 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 .SetupGet(fp => fp.Order)
                 .Returns(-1000);
 
+            if (valueProviderFactories == null)
+            {
+                valueProviderFactories = new List<IValueProviderFactory>();
+            }
+
             var invoker = new TestControllerActionInvoker(
                 new[] { filterProvider.Object },
                 new MockControllerFactory(this),
@@ -2056,7 +2120,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 new NullLoggerFactory().CreateLogger<ControllerActionInvoker>(),
                 new DiagnosticListener("Microsoft.AspNetCore"),
                 actionContext,
-                new IValueProviderFactory[0],
+                valueProviderFactories.AsReadOnly(),
                 maxAllowedErrorsInModelState);
             return invoker;
         }
@@ -2194,8 +2258,11 @@ namespace Microsoft.AspNetCore.Mvc.Internal
 
             public bool ReleaseCalled { get; private set; }
 
+            public ControllerContext ControllerContext { get; private set; }
+
             public object CreateController(ControllerContext context)
             {
+                ControllerContext = context;
                 CreateCalled = true;
                 return _controller;
             }
