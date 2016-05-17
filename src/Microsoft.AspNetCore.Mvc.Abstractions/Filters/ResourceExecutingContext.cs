@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Microsoft.AspNetCore.Mvc.Filters
 {
@@ -29,5 +30,10 @@ namespace Microsoft.AspNetCore.Mvc.Filters
         /// short-circuit execution of additional resource filters and the action itself.
         /// </remarks>
         public virtual IActionResult Result { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of <see cref="IValueProviderFactory"/> instances used by model binding.
+        /// </summary>
+        public IList<IValueProviderFactory> ValueProviderFactories { get; set; }
     }
 }
