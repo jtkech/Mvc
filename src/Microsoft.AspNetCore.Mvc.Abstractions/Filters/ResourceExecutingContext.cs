@@ -17,9 +17,14 @@ namespace Microsoft.AspNetCore.Mvc.Filters
         /// </summary>
         /// <param name="actionContext">The <see cref="ActionContext"/>.</param>
         /// <param name="filters">The list of <see cref="IFilterMetadata"/> instances.</param>
-        public ResourceExecutingContext(ActionContext actionContext, IList<IFilterMetadata> filters)
+        /// <param name="valueProviderFactories">The list of <see cref="IValueProviderFactory"/> instances.</param>
+        public ResourceExecutingContext(
+            ActionContext actionContext,
+            IList<IFilterMetadata> filters,
+            IList<IValueProviderFactory> valueProviderFactories)
             : base(actionContext, filters)
         {
+            ValueProviderFactories = valueProviderFactories;
         }
 
         /// <summary>

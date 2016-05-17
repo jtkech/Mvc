@@ -43,7 +43,8 @@ namespace Microsoft.AspNetCore.Mvc.Core.Test
         {
             return new ResourceExecutingContext(
                 CreateActionContext(),
-                filters);
+                filters,
+                valueProviderFactories: null);
         }
 
         private static ActionContext CreateActionContext()

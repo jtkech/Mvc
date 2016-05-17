@@ -216,8 +216,10 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         {
             _cursor.Reset();
 
-            _resourceExecutingContext = new ResourceExecutingContext(_controllerContext, _filters);
-            _resourceExecutingContext.ValueProviderFactories = _controllerContext.ValueProviderFactories;
+            _resourceExecutingContext = new ResourceExecutingContext(
+                _controllerContext,
+                _filters,
+                _controllerContext.ValueProviderFactories);
 
             return InvokeResourceFilterAsync();
         }
@@ -580,7 +582,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                             _controller,
                             arguments);
 
-                        result = CreateActionResult( actionMethodInfo.ReturnType, actionReturnValue);
+                        result = CreateActionResult(actionMethodInfo.ReturnType, actionReturnValue);
 
                         _logger.ActionMethodExecuted(_actionExecutingContext, result);
                     }

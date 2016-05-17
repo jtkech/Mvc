@@ -87,7 +87,8 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
 
             var resourceExecutingContext = new ResourceExecutingContext(
                 ac,
-                new IFilterMetadata[] { });
+                new IFilterMetadata[] { },
+                valueProviderFactories: null);
 
             var filter = new FormatFilter(mockObjects.OptionsManager);
 
@@ -322,7 +323,8 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
 
             var resourceExecutingContext = new ResourceExecutingContext(
                 actionContext,
-                new IFilterMetadata[] { });
+                new IFilterMetadata[] { },
+                valueProviderFactories: null);
 
             var filter = new FormatFilter(mockObjects.OptionsManager);
 
@@ -356,7 +358,8 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
 
             var resourceExecutingContext = new ResourceExecutingContext(
                 actionContext,
-                new IFilterMetadata[] { });
+                new IFilterMetadata[] { },
+                valueProviderFactories: null);
 
             var filter = new FormatFilter(mockObjects.OptionsManager);
 
@@ -392,7 +395,8 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
             {
                 var context = new ResourceExecutingContext(
                     MockActionContext,
-                    filters);
+                    filters,
+                    valueProviderFactories: null);
                 return context;
             }
 
