@@ -122,22 +122,28 @@ namespace Microsoft.AspNetCore.Mvc.Internal
 
         public virtual async Task InvokeAsync()
         {
+            object controller = null;
+            IActionResult result = null;
+            var controllerContext = _controllerContext;
+            var diagnosticSource = _diagnosticSource;
+
             _cursor.Reset();
             await InvokeNextAuthorizationFilterAsync();
 
             // If Authorization Filters return a result, it's a short circuit because
             // authorization failed. We don't execute Result Filters around the result.
+            result = _result;
             if (_result != null)
             {
-                _diagnosticSource.BeforeActionResult(_controllerContext, _result);
+                diagnosticSource.BeforeActionResult(controllerContext, result);
 
                 try
                 {
-                    await _result.ExecuteResultAsync(_controllerContext);
+                    await result.ExecuteResultAsync(controllerContext);
                 }
                 finally
                 {
-                    _diagnosticSource.AfterActionResult(_controllerContext, _result);
+                    diagnosticSource.AfterActionResult(controllerContext, result);
                 }
 
                 return;
@@ -152,22 +158,8 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 {
                     // This means we executed resource filters. We only need to handle unhandled exceptions, because
                     // if resource filters ran there's nothing else do it.
-                    if (_exceptionHandled)
-                    {
-                        _exception = null;
-                        _exceptionDispatchInfo = null;
-                        _exceptionHandled = false;
-                    }
-
-                    if (_exceptionDispatchInfo != null)
-                    {
-                        _exceptionDispatchInfo.Throw();
-                    }
-
-                    if (_exception != null)
-                    {
-                        throw _exception;
-                    }
+                    HandleException();
+                    Rethrow();
 
                     return;
                 }
@@ -180,25 +172,27 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 {
                     // This means we executed exception filters. We need to handle a short circuit result as well as
                     // any unhandled exceptions. Either of these cases will end the pipeline.
-                    if (_exceptionResult != null)
+                    var exceptionResult = _exceptionResult;
+                    if (exceptionResult != null)
                     {
                         _exception = null;
                         _exceptionDispatchInfo = null;
 
-                        _result = _exceptionResult;
+                        result = exceptionResult;
+                        _result = exceptionResult;
                         _exceptionResult = null;
 
                         // If Exception Filters provide a result, it's a short-circuit to 'handle' an exception.
                         // We don't execute Result Filters around the result since it's not a 'normal' result.
-                        _diagnosticSource.BeforeActionResult(_controllerContext, _result);
+                        diagnosticSource.BeforeActionResult(controllerContext, result);
 
                         try
                         {
-                            await _result.ExecuteResultAsync(_controllerContext);
+                            await result.ExecuteResultAsync(controllerContext);
                         }
                         finally
                         {
-                            _diagnosticSource.AfterActionResult(_controllerContext, _result);
+                            diagnosticSource.AfterActionResult(controllerContext, result);
                         }
 
                         return;
@@ -206,15 +200,7 @@ namespace Microsoft.AspNetCore.Mvc.Internal
 
                     // We need to rethrow any unhandled exceptions, since an unhandled exception in an
                     // exception filter would prevent the result from running.
-                    if (_exceptionDispatchInfo != null)
-                    {
-                        _exceptionDispatchInfo.Throw();
-                    }
-
-                    if (_exception != null)
-                    {
-                        throw _exception;
-                    }
+                    Rethrow();
 
                     // We don't need to look at the outcome of executing action filters or the action here. That would
                     // be taken care of inside of InvokeActionFiltersInsideExceptionFilter.
@@ -223,10 +209,12 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 {
                     // If we get here then this means that we didn't have any exception filters. We need to 
                     // run action filters and possibly the action itself.
-                    _controller = _createController(_controllerContext);
+                    controller = _createController(controllerContext);
+                    _controller = controller;
 
-                    _arguments = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-                    await _controllerArgumentBinder.BindArgumentsAsync(_controllerContext, _controller, _arguments);
+                    var arguments = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                    _arguments = arguments;
+                    await _controllerArgumentBinder.BindArgumentsAsync(controllerContext, controller, arguments);
 
                     _cursor.Reset();
                     await InvokeNextActionFilterAsync();
@@ -235,22 +223,8 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                     {
                         // We need to rethrow any unhandled exceptions, since an unhandled exception in an
                         // action filter would prevent the result from running.
-                        if (_exceptionHandled)
-                        {
-                            _exception = null;
-                            _exceptionDispatchInfo = null;
-                            _exceptionHandled = false;
-                        }
-
-                        if (_exceptionDispatchInfo != null)
-                        {
-                            _exceptionDispatchInfo.Throw();
-                        }
-
-                        if (_exception != null)
-                        {
-                            throw _exception;
-                        }
+                        HandleException();
+                        Rethrow();
                     }
                     else
                     {
@@ -258,30 +232,27 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                         // run the action itself.
                         try
                         {
-                            _diagnosticSource.BeforeActionMethod(_controllerContext, _arguments, _controller);
+                            diagnosticSource.BeforeActionMethod(controllerContext, arguments, controller);
 
-                            var method = _controllerContext.ActionDescriptor.MethodInfo;
+                            var method = controllerContext.ActionDescriptor.MethodInfo;
 
-                            var arguments = ControllerActionExecutor.PrepareArguments(_arguments, method.GetParameters());
+                            var orderedArguments = ControllerActionExecutor.PrepareArguments(arguments, method.GetParameters());
 
-                            _logger.ActionMethodExecuting(_actionExecutingContext, arguments);
+                            _logger.ActionMethodExecuting(_actionExecutingContext, orderedArguments);
 
                             var actionReturnValue = await ControllerActionExecutor.ExecuteAsync(
                                 _executor,
-                                _controller,
+                                controller,
                                 arguments);
 
-                            _result = CreateActionResult(method.ReturnType, actionReturnValue);
+                            result = CreateActionResult(method.ReturnType, actionReturnValue);
+                            _result = result;
 
-                            _logger.ActionMethodExecuted(_actionExecutingContext, _result);
+                            _logger.ActionMethodExecuted(_actionExecutingContext, result);
                         }
                         finally
                         {
-                            _diagnosticSource.AfterActionMethod(
-                                _controllerContext,
-                                _arguments,
-                                _controller,
-                                _result);
+                            diagnosticSource.AfterActionMethod(controllerContext, arguments, controller, result);
                         }
                     }
                 }
@@ -295,22 +266,8 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 {
                     // This means we executed result filters. We need to rethrow any unhandled exceptions so
                     // they will be visible outside of MVC.
-                    if (_exceptionHandled)
-                    {
-                        _exception = null;
-                        _exceptionDispatchInfo = null;
-                        _exceptionHandled = false;
-                    }
-
-                    if (_exceptionDispatchInfo != null)
-                    {
-                        _exceptionDispatchInfo.Throw();
-                    }
-
-                    if (_exception != null)
-                    {
-                        throw _exception;
-                    }
+                    HandleException();
+                    Rethrow();
 
                     return;
                 }
@@ -318,20 +275,22 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 {
                     // If we get here then this means that we didn't have any result filters. We need to 
                     // run the result itself.
-                    if (_result == null)
+                    result = _result;
+                    if (result == null)
                     {
-                        _result = new EmptyResult();
+                        result = new EmptyResult();
+                        _result = result;
                     }
 
-                    _diagnosticSource.BeforeActionResult(_controllerContext, _result);
+                    diagnosticSource.BeforeActionResult(controllerContext, result);
 
                     try
                     {
-                        await _result.ExecuteResultAsync(_controllerContext);
+                        await _result.ExecuteResultAsync(controllerContext);
                     }
                     finally
                     {
-                        _diagnosticSource.AfterActionResult(_controllerContext, _result);
+                        diagnosticSource.AfterActionResult(controllerContext, result);
                     }
                 }
             }
@@ -340,9 +299,9 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 // Release the instance after all filters have run. We don't need to surround
                 // Authorizations filters because the instance will be created much later than
                 // that.
-                if (_controller != null)
+                if (controller != null)
                 {
-                    _releaseController(_controllerContext, _controller);
+                    _releaseController(controllerContext, controller);
                 }
             }
         }
@@ -1319,6 +1278,29 @@ namespace Microsoft.AspNetCore.Mvc.Internal
             var genericType = ClosedGenericMatcher.ExtractGenericInterface(type, typeof(Task<>));
 
             return genericType?.GenericTypeArguments[0];
+        }
+
+        private void HandleException()
+        {
+            if (_exceptionHandled)
+            {
+                _exception = null;
+                _exceptionDispatchInfo = null;
+                _exceptionHandled = false;
+            }
+        }
+
+        private void Rethrow()
+        {
+            if (_exceptionDispatchInfo != null)
+            {
+                _exceptionDispatchInfo.Throw();
+            }
+
+            if (_exception != null)
+            {
+                throw _exception;
+            }
         }
 
         /// <summary>
