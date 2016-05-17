@@ -32,8 +32,8 @@ namespace Microsoft.AspNetCore.Mvc.Filters
         public virtual IActionResult Result { get; set; }
 
         /// <summary>
-        /// Gets or sets the list of <see cref="IValueProviderFactory"/> instances used by model binding.
+        /// Gets the list of <see cref="IValueProviderFactory"/> instances used by model binding.
         /// </summary>
-        public IList<IValueProviderFactory> ValueProviderFactories { get; set; }
+        public IList<IValueProviderFactory> ValueProviderFactories { get; }
     }
 }
