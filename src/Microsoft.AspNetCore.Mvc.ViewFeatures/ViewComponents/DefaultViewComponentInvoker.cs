@@ -83,13 +83,13 @@ namespace Microsoft.AspNetCore.Mvc.ViewComponents
             IViewComponentResult result;
             if (executor.IsMethodAsync)
             {
-                result = await InvokeAsyncCore(context);
+                result = await InvokeAsyncCore(executor, context);
             }
             else
             {
                 // We support falling back to synchronous if there is no InvokeAsync method, in this case we'll still
                 // execute the IViewResult asynchronously.
-                result = InvokeSyncCore(context);
+                result = InvokeSyncCore(executor, context);
             }
 
             await result.ExecuteAsync(context);
@@ -125,10 +125,7 @@ namespace Microsoft.AspNetCore.Mvc.ViewComponents
                 }
                 else
                 {
-                    throw new InvalidOperationException(Resources.FormatViewComponent_InvalidReturnValue(
-                        typeof(string).Name,
-                        typeof(IHtmlContent).Name,
-                        typeof(IViewComponentResult).Name));
+                    resultAsObject = await executor.ExecuteAsync(component, arguments);
                 }
 
                 var viewComponentResult = CoerceToViewComponentResult(resultAsObject);

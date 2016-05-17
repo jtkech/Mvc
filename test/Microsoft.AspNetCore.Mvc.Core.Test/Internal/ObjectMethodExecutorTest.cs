@@ -70,26 +70,6 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         }
 
         [Fact]
-        public async void ExecuteValueMethodUsingAsyncMethod()
-        {
-            var executor = GetExecutorForMethod("ValueMethod");
-            var result = await executor.ExecuteAsync(
-                _targetObject,
-                new object[] { 10, 20 });
-            Assert.Equal(30, (int)result);
-        }
-
-        [Fact]
-        public async void ExecuteVoidValueMethodUsingAsyncMethod()
-        {
-            var executor = GetExecutorForMethod("VoidValueMethod");
-            var result = await executor.ExecuteAsync(
-                _targetObject,
-                new object[] { 10 });
-            Assert.Same(null, result);
-        }
-
-        [Fact]
         public async void ExecuteValueMethodAsync()
         {
             var executor = GetExecutorForMethod("ValueMethodAsync");
@@ -97,16 +77,6 @@ namespace Microsoft.AspNetCore.Mvc.Internal
                 _targetObject,
                 new object[] { 10, 20 });
             Assert.Equal(30, (int)result);
-        }
-
-        [Fact]
-        public async void ExecuteVoidValueMethodAsync()
-        {
-            var executor = GetExecutorForMethod("VoidValueMethodAsync");
-            var result = await executor.ExecuteAsync(
-                _targetObject,
-                new object[] { 10 });
-            Assert.Same(null, result);
         }
 
         [Fact]
@@ -144,29 +114,39 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         }
 
         [Fact]
-        public void ExecuteMethodOfTaskDerivedTypeReturnTypeThrowsException()
+        public async Task ExecuteMethodOfTaskDerivedTypeReturnTypeThrowsException()
         {
+            // Arrange.
             var expectedException = string.Format(
                 CultureInfo.CurrentCulture,
                 "The method 'TaskActionWithCustomTaskReturnType' on type '{0}' returned a Task instance even though it is not an asynchronous method.",
                 typeof(TestObject));
+            var executor = GetExecutorForMethod("TaskActionWithCustomTaskReturnType");
 
-            var ex = Assert.Throws<InvalidOperationException>(
-                    () => GetExecutorForMethod("TaskActionWithCustomTaskReturnType"));
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => executor.ExecuteAsync(
+                    _targetObject,
+                    new object[] { 10, "hello" }));
+
             Assert.Equal(expectedException, ex.Message);
         }
 
         [Fact]
-        public void ExecuteMethodOfTaskDerivedTypeOfTReturnTypeThrowsException()
+        public async Task  ExecuteMethodOfTaskDerivedTypeOfTReturnTypeThrowsException()
         {
+            // Arrange.
             var expectedException = string.Format(
                 CultureInfo.CurrentCulture,
                 "The method 'TaskActionWithCustomTaskOfTReturnType' on type '{0}' returned a Task instance even though it is not an asynchronous method.",
                 typeof(TestObject));
+            var executor = GetExecutorForMethod("TaskActionWithCustomTaskOfTReturnType");
 
-            var ex = Assert.Throws<InvalidOperationException>(
-                    () => GetExecutorForMethod("TaskActionWithCustomTaskOfTReturnType"));
-
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => executor.ExecuteAsync(
+                    _targetObject,
+                    new object[] { 10, "hello" }));
             Assert.Equal(expectedException, ex.Message);
         }
 
@@ -186,7 +166,6 @@ namespace Microsoft.AspNetCore.Mvc.Internal
             }
 
             Assert.Equal(expectedValues, defaultValues);
-
         }
 
         private ObjectMethodExecutor GetExecutorForMethod(string methodName)
@@ -197,16 +176,16 @@ namespace Microsoft.AspNetCore.Mvc.Internal
         }
 
         public class TestObject
-        {            
+        {
             public string value;
             public int ValueMethod(int i, int j)
             {
-                return i+j;
+                return i + j;
             }
 
             public void VoidValueMethod(int i)
             {
-                
+
             }
             public TestObject ValueMethodWithReturnType(int i)
             {
@@ -283,8 +262,8 @@ namespace Microsoft.AspNetCore.Mvc.Internal
             }
 
             public string EchoWithNoDefaultAttributesAndValues(
-                string input1, 
-                int input2, 
+                string input1,
+                int input2,
                 bool input3,
                 TestObject input4)
             {
