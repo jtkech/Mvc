@@ -553,10 +553,10 @@ Products: Music Systems, Televisions (3)";
             var beginRouteFormAntiforgeryToken = AntiforgeryTestHelper.RetrieveAntiforgeryToken(responseContent, "/controller2/action2");
 
 #if GENERATE_BASELINES
-                // Reverse usual substitution and insert a format item into the new file content.
-                responseContent = responseContent.Replace(beginFormAntiforgeryToken, "{0}");
-                responseContent = responseContent.Replace(beginRouteFormAntiforgeryToken, "{1}");
-                ResourceFile.UpdateFile(_resourcesAssembly, outputFile, expectedContent, responseContent);
+            // Reverse usual substitution and insert a format item into the new file content.
+            responseContent = responseContent.Replace(beginFormAntiforgeryToken, "{0}");
+            responseContent = responseContent.Replace(beginRouteFormAntiforgeryToken, "{1}");
+            ResourceFile.UpdateFile(_resourcesAssembly, outputFile, expectedContent, responseContent);
 #else
             expectedContent = string.Format(expectedContent, beginFormAntiforgeryToken, beginRouteFormAntiforgeryToken);
             // Mono issue - https://github.com/aspnet/External/issues/19

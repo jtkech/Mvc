@@ -106,12 +106,13 @@ namespace Microsoft.AspNetCore.Mvc.FunctionalTests
 
             responseContent = responseContent.Trim();
 
-            var forgeryToken = AntiforgeryTestHelper.RetrieveAntiforgeryToken(responseContent, "/Employee/DuplicateAntiforgeryTokenRegistration");
+            var forgeryToken = AntiforgeryTestHelper.RetrieveAntiforgeryToken(
+                responseContent, "/Employee/DuplicateAntiforgeryTokenRegistration");
 
 #if GENERATE_BASELINES
-                // Reverse usual substitution and insert a format item into the new file content.
-                responseContent = responseContent.Replace(forgeryToken, "{0}");
-                ResourceFile.UpdateFile(_resourcesAssembly, outputFile, expectedContent, responseContent);
+            // Reverse usual substitution and insert a format item into the new file content.
+            responseContent = responseContent.Replace(forgeryToken, "{0}");
+            ResourceFile.UpdateFile(_resourcesAssembly, outputFile, expectedContent, responseContent);
 #else
             expectedContent = string.Format(expectedContent, forgeryToken);
             // Mono issue - https://github.com/aspnet/External/issues/19
